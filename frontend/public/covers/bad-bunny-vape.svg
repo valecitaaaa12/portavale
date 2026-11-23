@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Bad Bunny Vape Bolivia">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a1a1a"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+    <linearGradient id="smoke" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.02"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.25"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#bg)"/>
+  <g fill="none" stroke="url(#smoke)" stroke-width="2">
+    <path d="M180 460 C 180 380, 260 360, 240 280 C 220 200, 300 180, 280 100"/>
+    <path d="M400 470 C 400 390, 480 370, 460 290 C 440 210, 520 190, 500 110"/>
+    <path d="M620 460 C 620 380, 700 360, 680 280 C 660 200, 740 180, 720 100"/>
+    <path d="M290 470 C 290 410, 340 395, 330 340"/>
+    <path d="M510 470 C 510 410, 560 395, 550 340"/>
+  </g>
+  <rect x="0" y="440" width="800" height="60" fill="#000000" opacity="0.55"/>
+  <text x="56" y="478" font-family="Georgia, serif" font-style="italic" font-size="34" fill="#ffffff">Bad Bunny Vape</text>
+  <text x="640" y="477" font-family="Helvetica, Arial, sans-serif" font-size="14" letter-spacing="6" fill="#ffffff" opacity="0.7">BOLIVIA</text>
+  <circle cx="712" cy="90" r="46" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="1.5"/>
+  <circle cx="712" cy="90" r="60" fill="none" stroke="#ffffff" stroke-opacity="0.15" stroke-width="1"/>
+</svg>

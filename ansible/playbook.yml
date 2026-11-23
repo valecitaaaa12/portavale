@@ -1,0 +1,174 @@
+---
+- name: Configurar VM del portafolio (Docker, Git, Firewall, VNC)
+  hosts: all
+  become: true
+  vars:
+    allowed_tcp_ports: [22, 80, 443, 5900]
+    deploy_dir: /opt/portafolio
+    dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') | default('valecitaaaa12', true) }}"
+    frontend_image: "{{ dockerhub_username }}/portafolio-frontend:latest"
+    backend_image: "{{ dockerhub_username }}/portafolio-backend:latest"
+    vnc_password: "{{ lookup('env', 'VNC_PASSWORD') }}"
+
+  tasks:
+    - name: Validar que la contraseña VNC se haya proporcionado
+      assert:
+        that:
+          - vnc_password | length >= 8
+        fail_msg: "Define VNC_PASSWORD (mínimo 8 caracteres) antes de ejecutar este playbook."
+      no_log: true
+
+    - name: Actualizar índices de paquetes
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Instalar paquetes base (git, curl, ufw)
+      apt:
+        name:
+          - git
+          - curl
+          - ufw
+        state: present
+
+    - name: Instalar Docker con el script oficial
+      shell: curl -fsSL https://get.docker.com | sh
+      args:
+        creates: /usr/bin/docker
+
+    - name: Asegurar que Docker esté habilitado y corriendo
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Agregar usuario ubuntu al grupo docker
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    # ---------------- Firewall (UFW) ----------------
+    - name: Permitir puertos en UFW (22, 80, 443, 5900)
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: "{{ allowed_tcp_ports }}"
+
+    - name: Habilitar UFW con política por defecto deny
+      ufw:
+        state: enabled
+        policy: deny
+
+    # ---------------- Reglas explícitas de iptables ----------------
+    - name: Permitir puerto 80 en iptables
+      shell: iptables -C INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+
+    - name: Permitir puerto 443 en iptables
+      shell: iptables -C INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+    - name: Permitir puerto 22 en iptables
+      shell: iptables -C INPUT -p tcp --dport 22 -j ACCEPT 2>/dev/null || iptables -A INPUT -p tcp --dport 22 -j ACCEPT
+
+    # ---------------- VNC ----------------
+    - name: Instalar servidor VNC (TigerVNC)
+      apt:
+        name: tigervnc-standalone-server
+        state: present
+
+    - name: Crear directorio .vnc del usuario ubuntu
+      file:
+        path: /home/ubuntu/.vnc
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "0700"
+
+    - name: Configurar contraseña de VNC
+      shell: echo '{{ vnc_password }}' | vncpasswd -f > /home/ubuntu/.vnc/passwd && chmod 600 /home/ubuntu/.vnc/passwd
+      args:
+        creates: /home/ubuntu/.vnc/passwd
+      no_log: true
+
+    - name: Crear servicio del servidor VNC
+      copy:
+        dest: /etc/systemd/system/vncserver.service
+        content: |
+          [Unit]
+          Description=TigerVNC server :1
+          After=network.target
+
+          [Service]
+          User=ubuntu
+          Type=forking
+          ExecStart=/usr/bin/vncserver :1 -localhost no -SecurityTypes VncAuth -PasswordFile /home/ubuntu/.vnc/passwd -Geometry 1280x800
+          ExecStop=/usr/bin/vncserver -kill :1
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: reiniciar vnc
+
+    - name: Habilitar servicio VNC
+      systemd:
+        name: vncserver
+        enabled: yes
+        daemon_reload: yes
+        state: started
+
+    # ---------------- Despliegue del portafolio ----------------
+    - name: Crear directorio de despliegue
+      file:
+        path: "{{ deploy_dir }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Copiar docker-compose.prod.yml
+      copy:
+        src: "{{ playbook_dir }}/../docker-compose.prod.yml"
+        dest: "{{ deploy_dir }}/docker-compose.yml"
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Crear archivo .env con el usuario de Docker Hub
+      copy:
+        dest: "{{ deploy_dir }}/.env"
+        content: "DOCKERHUB_USERNAME={{ dockerhub_username }}\n"
+        owner: ubuntu
+        group: ubuntu
+        mode: "0600"
+
+    - name: Login en Docker Hub
+      shell: |
+        echo '{{ lookup("env", "DOCKERHUB_TOKEN") }}' | docker login -u '{{ dockerhub_username }}' --password-stdin
+      no_log: true
+      register: docker_login
+      changed_when: false
+      failed_when: false
+
+    - name: Levantar el stack con Docker Compose
+      command: docker compose up -d --pull always
+      args:
+        chdir: "{{ deploy_dir }}"
+      environment:
+        DOCKERHUB_USERNAME: "{{ dockerhub_username }}"
+
+    - name: Verificar que los contenedores estén corriendo
+      command: docker compose ps
+      args:
+        chdir: "{{ deploy_dir }}"
+      register: compose_ps
+      changed_when: false
+
+    - name: Mostrar estado de los contenedores
+      debug:
+        var: compose_ps.stdout_lines
+
+  handlers:
+    - name: reiniciar vnc
+      systemd:
+        name: vncserver
+        state: restarted
+        daemon_reload: yes

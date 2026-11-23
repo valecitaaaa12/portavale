@@ -1,0 +1,30 @@
+{
+  "name": "portafolio-backend",
+  "version": "1.0.0",
+  "description": "API REST del portafolio personal de Valentina Valda - Práctica 3.2",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "seed": "node src/db/seed.js",
+    "test": "jest --runInBand",
+    "test:unit": "jest tests/unit --runInBand",
+    "test:integration": "jest tests/integration --runInBand"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  }
+}

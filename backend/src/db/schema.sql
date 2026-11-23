@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS projects (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  description TEXT NOT NULL,
+  tech TEXT[] NOT NULL DEFAULT '{}',
+  url VARCHAR(300),
+  repo_url VARCHAR(300),
+  image VARCHAR(300)
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(200) NOT NULL,
+  message TEXT NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

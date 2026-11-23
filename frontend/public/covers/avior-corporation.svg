@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="AVIOR Corporation SRL">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f4f4f4"/>
+      <stop offset="70%" stop-color="#dcdcdc"/>
+      <stop offset="100%" stop-color="#c9c9c9"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#sky)"/>
+  <g stroke="#b5b5b5" stroke-width="1" opacity="0.7">
+    <line x1="0" y1="120" x2="800" y2="120"/>
+    <line x1="0" y1="200" x2="800" y2="200"/>
+    <line x1="0" y1="280" x2="800" y2="280"/>
+  </g>
+  <path d="M0 380 L800 340 L800 500 L0 500 Z" fill="#111111"/>
+  <g fill="#111111">
+    <path d="M400 175 L438 215 L400 205 L362 215 Z"/>
+    <path d="M392 205 L408 205 L414 258 L386 258 Z"/>
+    <path d="M360 222 L440 222 L434 234 L366 234 Z"/>
+    <path d="M394 258 L406 258 L410 285 L390 285 Z"/>
+  </g>
+  <g stroke="#ffffff" stroke-width="1.5" opacity="0.5" stroke-dasharray="8 10">
+    <path d="M60 430 L740 395" fill="none"/>
+  </g>
+  <text x="56" y="80" font-family="Georgia, serif" font-style="italic" font-size="40" fill="#111111">AVIOR</text>
+  <text x="58" y="106" font-family="Helvetica, Arial, sans-serif" font-size="13" letter-spacing="7" fill="#555555">CORPORATION SRL</text>
+  <text x="56" y="466" font-family="Helvetica, Arial, sans-serif" font-size="14" letter-spacing="5" fill="#ffffff" opacity="0.85">FORMACIÓN AERONÁUTICA</text>
+</svg>

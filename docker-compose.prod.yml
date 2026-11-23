@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: portafolio
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d portafolio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ${DOCKERHUB_USERNAME}/portafolio-backend:latest
+    environment:
+      PORT: "5000"
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}@db:5432/portafolio
+      AUTO_MIGRATE: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/portafolio-frontend:latest
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -1,0 +1,151 @@
+name: MAIN - Docker, DockerHub, Terraform y Ansible
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests (unit + integración + E2E)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: portafolio
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Tests backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm test
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/portafolio
+
+      - name: Tests frontend (unit)
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+
+      - name: Tests E2E (Playwright)
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/portafolio
+
+  docker:
+    name: Build y push a Docker Hub
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login en Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build y push frontend
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/portafolio-frontend:latest ./frontend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/portafolio-frontend:latest
+
+      - name: Build y push backend
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/portafolio-backend:latest ./backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/portafolio-backend:latest
+
+  terraform:
+    name: Crear VM en Oracle Cloud (Terraform)
+    needs: docker
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    outputs:
+      public_ip: ${{ steps.apply.outputs.public_ip }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Guardar clave privada de OCI
+        run: echo "${{ secrets.OCI_PRIVATE_KEY }}" > oci_api_key.pem
+        env:
+          OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform apply
+        run: |
+          terraform apply -auto-approve -input=false \
+            -var="tenancy_ocid=${{ secrets.OCI_TENANCY_OCID }}" \
+            -var="user_ocid=${{ secrets.OCI_USER_OCID }}" \
+            -var="fingerprint=${{ secrets.OCI_FINGERPRINT }}" \
+            -var="private_key_path=${{ github.workspace }}/terraform/oci_api_key.pem" \
+            -var="region=${{ secrets.OCI_REGION }}" \
+            -var="compartment_ocid=${{ secrets.OCI_COMPARTMENT_OCID }}" \
+            -var="ssh_public_key=${{ secrets.SSH_PUBLIC_KEY }}"
+
+      - name: Capturar IP pública
+        id: apply
+        run: echo "public_ip=$(terraform output -raw public_ip)" >> "$GITHUB_OUTPUT"
+
+  ansible:
+    name: Configurar VM con Ansible
+    needs: terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Guardar clave SSH privada
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > oci_key
+          chmod 600 oci_key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Generar inventario con la IP pública
+        run: |
+          cat > ansible/inventory.ini <<EOF
+          [portafolio]
+          ${{ needs.terraform.outputs.public_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=${{ github.workspace }}/oci_key ansible_python_interpreter=/usr/bin/python3
+          EOF
+
+      - name: Instalar Ansible
+        run: pip install --break-system-packages ansible
+
+      - name: Ejecutar playbook
+        run: ansible-playbook -i ansible/inventory.ini ansible/playbook.yml -v
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          VNC_PASSWORD: ${{ secrets.VNC_PASSWORD }}

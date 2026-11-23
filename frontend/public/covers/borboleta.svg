@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Borboleta Salón de Eventos">
+  <rect width="800" height="500" fill="#ffffff"/>
+  <g fill="none" stroke="#111111" stroke-width="1.4">
+    <path d="M400 250 C 330 160, 210 150, 190 230 C 170 310, 300 330, 400 250 Z"/>
+    <path d="M400 250 C 470 160, 590 150, 610 230 C 630 310, 500 330, 400 250 Z"/>
+    <path d="M400 250 C 350 320, 250 350, 230 400 C 215 445, 330 430, 400 250 Z"/>
+    <path d="M400 250 C 450 320, 550 350, 570 400 C 585 445, 470 430, 400 250 Z"/>
+    <line x1="400" y1="215" x2="400" y2="360"/>
+    <path d="M400 215 C 392 190, 380 180, 368 172"/>
+    <path d="M400 215 C 408 190, 420 180, 432 172"/>
+    <circle cx="366" cy="170" r="3.5" fill="#111111"/>
+    <circle cx="434" cy="170" r="3.5" fill="#111111"/>
+  </g>
+  <g stroke="#d8d8d8" stroke-width="1">
+    <line x1="60" y1="60" x2="180" y2="60"/>
+    <line x1="620" y1="440" x2="740" y2="440"/>
+    <line x1="60" y1="60" x2="60" y2="130"/>
+    <line x1="740" y1="370" x2="740" y2="440"/>
+  </g>
+  <text x="60" y="452" font-family="Georgia, serif" font-style="italic" font-size="36" fill="#111111">Borboleta</text>
+  <text x="60" y="478" font-family="Helvetica, Arial, sans-serif" font-size="12" letter-spacing="6" fill="#777777">SALÓN DE EVENTOS</text>
+  <text x="740" y="70" text-anchor="end" font-family="Georgia, serif" font-style="italic" font-size="20" fill="#aaaaaa">Sucre</text>
+</svg>
