@@ -22,7 +22,7 @@ variable "private_key_path" {
 variable "region" {
   type        = string
   description = "Región de Oracle Cloud"
-  default     = "us-ashburn-1"
+  default     = "sa-saopaulo-1"
 }
 
 variable "compartment_ocid" {
@@ -37,30 +37,30 @@ variable "ssh_public_key" {
 
 variable "instance_shape" {
   type        = string
-  description = "Shape pagado de la instancia para el despliegue"
-  default     = "VM.Standard.E4.Flex"
+  description = "Shape de VM; el valor predeterminado usa VM.Standard.E2.1.Micro, sujeto a capacidad regional"
+  default     = "VM.Standard.E2.1.Micro"
 }
 
 variable "instance_ocpus" {
   type        = number
-  description = "OCPU para VM.Standard.E4.Flex"
-  default     = 1
+  description = "OCPU para shapes flexibles como A1 o E4"
+  default     = 2
 }
 
 variable "instance_memory_gbs" {
   type        = number
-  description = "Memoria en GB para VM.Standard.E4.Flex"
-  default     = 8
+  description = "Memoria para shapes flexibles como A1 o E4"
+  default     = 12
 }
 
 variable "vcn_cidr" {
   type    = string
-  default = "10.0.0.0/16"
+  default = "10.20.0.0/16"
 }
 
 variable "subnet_cidr" {
   type    = string
-  default = "10.0.1.0/24"
+  default = "10.20.1.0/24"
 }
 
 variable "vm_display_name" {

@@ -4,7 +4,7 @@ data "oci_identity_availability_domains" "ads" {
 
 data "oci_core_images" "ubuntu" {
   compartment_id           = var.compartment_ocid
-  operating_system         = "Canonical"
+  operating_system         = "Canonical Ubuntu"
   operating_system_version = "24.04"
   shape                    = var.instance_shape
   sort_by                  = "TIMECREATED"
@@ -111,9 +111,12 @@ resource "oci_core_instance" "portafolio_vm" {
   display_name        = var.vm_display_name
   shape               = var.instance_shape
 
-  shape_config {
-    ocpus         = var.instance_ocpus
-    memory_in_gbs = var.instance_memory_gbs
+  dynamic "shape_config" {
+    for_each = contains(["VM.Standard.A1.Flex", "VM.Standard.E4.Flex"], var.instance_shape) ? [1] : []
+    content {
+      ocpus         = var.instance_ocpus
+      memory_in_gbs = var.instance_memory_gbs
+    }
   }
 
   create_vnic_details {

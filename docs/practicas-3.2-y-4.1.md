@@ -10,7 +10,7 @@ Este repositorio reúne el portafolio personal (práctica 3.2) y AVIOR, un MVP d
 - **Pruebas automatizadas:** 20 unitarias de frontend, 10 unitarias de backend, 8 pruebas de integración API y 6 E2E con Playwright.
 - **CI en `dev`:** cada push y pull request ejecuta los seis grupos de pruebas definidos en `.github/workflows/dev.yml`.
 - **Docker:** imágenes separadas para frontend y backend; Compose de producción con PostgreSQL.
-- **VM:** Terraform define VCN, subnet pública, reglas de red e instancia pagada Ubuntu 24.04 con IP pública: `VM.Standard.E4.Flex`, 1 OCPU y 8 GB RAM. La tarifa pública de cómputo estima aproximadamente US$35.40 por 730 horas al mes, sin disco, tráfico ni impuestos. Ansible instala Git, Docker, UFW/iptables y VNC. VNC escucha solo en localhost; acceder mediante túnel SSH: `ssh -L 5901:127.0.0.1:5901 ubuntu@IP_PUBLICA`.
+- **VM:** la cuenta Oracle conectada aparece como Free Trial. São Paulo no tuvo capacidad para `VM.Standard.A1.Flex`, por lo que Terraform recurre a la segunda `VM.Standard.E2.1.Micro` Always Free disponible, con Ubuntu 24.04 e IP pública. Su memoria es 1 GB, apropiada para una demostración liviana. La VCN y subnet propias usan `10.20.0.0/16` y `10.20.1.0/24`, sin modificar `avior-web`. Ansible instala Git, Docker, UFW/iptables y VNC. VNC escucha solo en localhost; acceder mediante túnel SSH: `ssh -L 5901:127.0.0.1:5901 ubuntu@IP_PUBLICA`.
 
 ## Práctica 4.1 — MVP AVIOR
 
@@ -39,7 +39,7 @@ En `dev`, GitHub Actions inicia PostgreSQL como servicio para las pruebas que lo
 
 ## Publicación en `main`
 
-`.github/workflows/main.yml` espera pruebas verdes y publica cuatro imágenes a Docker Hub: `portafolio-frontend`, `portafolio-backend`, `mvp-avior-frontend` y `mvp-avior-backend`. El job Terraform usa el backend OCI nativo y estado remoto privado en Object Storage para actualizar la misma infraestructura en siguientes ejecuciones. El job Terraform corre bajo el entorno GitHub `oci-production`; hay que configurarlo con un revisor obligatorio para que una persona apruebe el despliegue pagado. Después, Ansible configura/despliega el Compose conjunto en la VM. El portafolio queda en `/` y AVIOR en `/mvp/`.
+`.github/workflows/main.yml` espera pruebas verdes y publica cuatro imágenes a Docker Hub: `portafolio-frontend`, `portafolio-backend`, `mvp-avior-frontend` y `mvp-avior-backend`. El job Terraform usa el backend OCI nativo y estado remoto privado en Object Storage para actualizar la misma infraestructura en siguientes ejecuciones. El job Terraform corre bajo el entorno GitHub `oci-production`. Después, Ansible configura/despliega el Compose conjunto en la VM. El push remoto y el flujo de publicación/despliegue aún requieren finalizar la verificación de acceso a GitHub y configurar los secretos. El portafolio queda en `/` y AVIOR en `/mvp/`.
 
 Crear previamente un bucket privado y versionado para el estado Terraform. El usuario de API de OCI debe tener permisos de lectura/escritura de objetos en ese bucket. Configurar estos **GitHub Actions Secrets** en el repositorio: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `OCI_TENANCY_OCID`, `OCI_USER_OCID`, `OCI_FINGERPRINT`, `OCI_PRIVATE_KEY`, `OCI_REGION`, `OCI_COMPARTMENT_OCID`, `OCI_OBJECT_STORAGE_NAMESPACE`, `OCI_STATE_BUCKET`, `SSH_PUBLIC_KEY`, `SSH_PRIVATE_KEY`, `POSTGRES_PASSWORD`, `MVP_POSTGRES_PASSWORD`, `MVP_JWT_SECRET`, `MVP_ADMIN_USERNAME`, `MVP_ADMIN_PASSWORD`, `VNC_PASSWORD`. La IP pública se obtiene del output de Terraform, no se guarda como secreto.
 

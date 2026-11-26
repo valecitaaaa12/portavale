@@ -50,8 +50,8 @@ Antes del primer despliegue:
 
 1. En OCI, crea un bucket privado de Object Storage para el estado Terraform y habilita el versionado del bucket. Anota el namespace del Object Storage.
 2. En OCI, confirma que el usuario de las credenciales de API de Terraform tenga permiso de leer/escribir objetos en ese bucket.
-3. En GitHub, añade los secretos requeridos de la tabla siguiente y crea el entorno `oci-production` con un revisor obligatorio. El job de Terraform quedará detenido hasta que una persona apruebe el despliegue de pago.
-4. Revisa el costo antes de aprobar el job. La configuración usa `VM.Standard.E4.Flex`, 1 OCPU y 8 GB RAM, una instancia pagada. La estimación de cómputo es aproximadamente US$0.0484922/hora (US$35.40 por 730 horas), sin incluir disco de arranque, almacenamiento, tráfico, impuestos ni variaciones regionales. Confirma el total en el estimador OCI de la región de la cuenta.
+3. En GitHub, añade los secretos requeridos de la tabla siguiente y configura el entorno `oci-production` utilizado por el workflow de despliegue.
+4. La cuenta OCI conectada aparece como Free Trial en la región São Paulo. La VM preexistente `avior-web` se identificó como infraestructura ajena a estas prácticas y no se modificó. Se preparó una VCN y subnet independientes (`10.20.0.0/16` y `10.20.1.0/24`) y se intentó crear una instancia nueva `portafolio-vm` con Ubuntu 24.04 `VM.Standard.E2.1.Micro`. OCI devolvió `500-InternalError: Out of host capacity`; la VM aún no existe. Terraform conserva la configuración para reintentar cuando OCI tenga capacidad. No se lanzó una instancia de pago.
 5. VNC solo escucha en localhost; conéctate mediante túnel SSH: `ssh -L 5901:127.0.0.1:5901 ubuntu@IP_PUBLICA`.
 
 | GitHub Secret | Uso |
