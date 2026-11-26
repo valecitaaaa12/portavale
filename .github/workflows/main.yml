@@ -21,7 +21,7 @@ jobs:
     needs: tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -68,7 +68,7 @@ jobs:
       run:
         working-directory: terraform
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.12.0
@@ -128,7 +128,7 @@ jobs:
     needs: [dockerhub, terraform]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Crear credenciales temporales
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -156,3 +156,4 @@ jobs:
         run: ansible-playbook -i ansible/inventory.ini ansible/playbook.yml
       - if: always()
         run: rm -f oci_key ansible/inventory.ini
+
