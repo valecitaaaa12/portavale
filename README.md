@@ -51,8 +51,8 @@ Antes del primer despliegue:
 1. En OCI, crea un bucket privado de Object Storage para el estado Terraform y habilita el versionado del bucket. Anota el namespace del Object Storage.
 2. En OCI, confirma que el usuario de las credenciales de API de Terraform tenga permiso de leer/escribir objetos en ese bucket.
 3. En GitHub, añade los secretos requeridos de la tabla siguiente y configura el entorno `oci-production` utilizado por el workflow de despliegue.
-4. La cuenta OCI conectada aparece como Free Trial en la región São Paulo. La VM preexistente `avior-web` se identificó como infraestructura ajena a estas prácticas y no se modificó. Se preparó una VCN y subnet independientes (`10.20.0.0/16` y `10.20.1.0/24`) y se intentó crear una instancia nueva `portafolio-vm` con Ubuntu 24.04 `VM.Standard.E2.1.Micro`. OCI devolvió `500-InternalError: Out of host capacity`; la VM aún no existe. Terraform conserva la configuración para reintentar cuando OCI tenga capacidad. No se lanzó una instancia de pago.
-5. VNC solo escucha en localhost; conéctate mediante túnel SSH: `ssh -L 5901:127.0.0.1:5901 ubuntu@IP_PUBLICA`.
+4. La cuenta OCI está suscrita a São Paulo. Crear otra VM allí falló con `Out of host capacity`, por lo que el despliegue se hizo en la instancia ya existente `avior-web` (150.230.69.130), sin sustituir el sitio que sirve en `/`. Las prácticas responden en `/practicas/portafolio/` y `/practicas/mvp/`. La VM existente es Always Free; no se lanzó una instancia de pago.
+5. La configuración de VNC del playbook corresponde a una VM nueva. No se instaló VNC en `avior-web`: la instancia existente tiene 1 GB de RAM y está sirviendo AVIOR más las dos prácticas.
 
 | GitHub Secret | Uso |
 |---|---|
@@ -69,6 +69,12 @@ No guardes credenciales, tokens, claves privadas ni archivos `.env` en Git.
 
 ## Dominio opcional
 
-Cloudflare solo añade puntos si existe un dominio y una zona DNS bajo tu cuenta. Cuando confirmes el dominio, el registro `A` debe apuntar a la IP pública de la VM; después se habilita HTTPS y proxy DNS. No se compró ni cambió un dominio como parte de estos cambios locales.
+Cloudflare solo añade puntos si existe un dominio y una zona DNS bajo tu cuenta. Cuando confirmes el dominio, el registro `A` debe apuntar a `150.230.69.130`; después se habilita HTTPS y proxy DNS. No se compró ni cambió un dominio. El despliegue actual funciona por HTTP.
+
+## Estado del despliegue actual
+
+El 26 de noviembre de 2026 se publicaron las aplicaciones en la VM existente. Se validaron desde fuera de la instancia la página AVIOR existente, las dos interfaces y las dos rutas de salud de API; todas devolvieron HTTP 200. La ejecución DEV `45822973721` del commit `96ef419` terminó correctamente. Las cuatro imágenes están construidas y ejecutándose en la VM; falta publicarlas en Docker Hub y completar el workflow MAIN cuando estén configurados sus secretos. Consulta [docs/OCI_EXISTING_VM.md](docs/OCI_EXISTING_VM.md).
+
+Las reglas TCP 80 y 443 en iptables se conservan mediante `deployment/configure-firewall.sh` y `portavale-firewall.service`. Para repetir la configuración, ejecuta `sudo bash deployment/configure-firewall.sh` antes del script de rutas.
 
 Consulta [docs/practicas-3.2-y-4.1.md](docs/practicas-3.2-y-4.1.md) para el detalle de requisitos, responsabilidades del equipo y evidencias.
