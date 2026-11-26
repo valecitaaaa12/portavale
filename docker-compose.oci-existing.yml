@@ -40,7 +40,7 @@ services:
     networks:
       internal: {}
       edge:
-        aliases: [portavale-portfolio-api]
+        aliases: [portavale-portfolio-api, backend]
     labels:
       com.valda.app: portfolio-api
 
@@ -107,7 +107,7 @@ services:
     networks:
       internal: {}
       edge:
-        aliases: [portavale-mvp-api]
+        aliases: [portavale-mvp-api, mvp-backend]
     labels:
       com.valda.app: mvp-avior-api
 
@@ -115,6 +115,7 @@ services:
     image: portavale-mvp-web:latest
     build:
       context: ./mvp-avior/frontend
+      dockerfile: Dockerfile.oracle
       args:
         VITE_BASE_PATH: /practicas/mvp/
         VITE_API_URL: /practicas/mvp-api
@@ -126,7 +127,7 @@ services:
     restart: unless-stopped
     networks:
       edge:
-        aliases: [portavale-mvp-web]
+        aliases: [portavale-mvp-web, mvp-frontend]
 
 volumes:
   portavale_portfolio_pgdata:
