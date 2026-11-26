@@ -57,6 +57,17 @@ jobs:
   portfolio-e2e:
     name: Portafolio - E2E
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: portafolio
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d portafolio"
+          --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -66,10 +77,16 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
         working-directory: frontend
+      - name: Instalar dependencias del backend (lo usa el servidor E2E)
+        run: npm ci
+        working-directory: backend
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
       - run: npm run test:e2e
         working-directory: frontend
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/portafolio
+          AUTO_MIGRATE: "true"
 
   mvp-unit:
     name: MVP AVIOR - unitarios frontend y backend
