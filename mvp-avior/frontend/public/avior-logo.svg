@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 340" role="img" aria-label="AVIOR Escuela de Aviación S.R.L.">
+  <rect width="900" height="340" fill="#ffffff"/>
+
+  <!-- AVIOR wordmark -->
+  <g font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-style="italic" font-size="150" letter-spacing="-6">
+    <text x="48" y="196" fill="#111111">A</text>
+    <text x="168" y="196" fill="#c1121f">V</text>
+    <text x="288" y="196" fill="#111111">IOR</text>
+  </g>
+
+  <!-- Eagle mark -->
+  <g fill="none" stroke="#111111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M640 96 L712 60 L688 104 L760 84 L724 132 L796 128 L742 164 L812 172 L744 194 L806 220 L736 224 L782 258 L712 244 L740 288 L676 254 L690 300 L648 258"/>
+    <path d="M640 96 C 604 130, 596 186, 622 232"/>
+    <path d="M660 130 L716 116 M668 168 L730 158 M674 206 L734 202 M678 242 L732 240"/>
+  </g>
+  <path d="M612 214 C 630 226, 646 230, 664 226 C 650 240, 630 240, 612 232 Z" fill="#111111"/>
+
+  <!-- S.R.L. -->
+  <text x="812" y="262" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="30" fill="#111111">S.R.L.</text>
+
+  <!-- Tagline -->
+  <text x="52" y="272" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="34" letter-spacing="7" fill="#111111">ESCUELA DE AVIACIÓN</text>
+
+  <!-- Red accent rule -->
+  <rect x="52" y="292" width="470" height="6" fill="#c1121f"/>
+</svg>

@@ -80,16 +80,6 @@ resource "oci_core_security_list" "portafolio" {
     }
   }
 
-  # VNC (5900-5901)
-  ingress_security_rules {
-    source   = "0.0.0.0/0"
-    protocol = "6"
-    tcp_options {
-      min = 5900
-      max = 5901
-    }
-  }
-
   # ICMP (ping)
   ingress_security_rules {
     source = "0.0.0.0/0"

@@ -91,3 +91,12 @@ Para producción, define `POSTGRES_PASSWORD`, `DOCKERHUB_USERNAME` y `VNC_PASSWO
 ## 🌐 Cloudflare (puntos extra)
 
 Zona de dominio + registro `A` apuntando a la IP pública de la VM.
+# Portafolio Valentina y MVP AVIOR
+
+El repositorio entrega dos prácticas:
+
+- **Práctica 3.2:** portafolio personal con React/Vite, Express y PostgreSQL.
+- **Práctica 4.1:** MVP AVIOR para administrar instructores, horas y pagos, con React/Vite, Express y PostgreSQL.
+
+La guía de requisitos, pruebas, Docker, GitHub Actions, Terraform, Ansible y pasos de entrega está en [docs/practicas-3.2-y-4.1.md](docs/practicas-3.2-y-4.1.md).
+

@@ -25,6 +25,44 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  mvp-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${MVP_POSTGRES_PASSWORD:?Define MVP_POSTGRES_PASSWORD}
+      POSTGRES_DB: mvp_avior
+    volumes:
+      - mvp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mvp_avior"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  mvp-backend:
+    image: ${DOCKERHUB_USERNAME:?Define DOCKERHUB_USERNAME}/mvp-avior-backend:latest
+    environment:
+      PORT: "5001"
+      DATABASE_URL: postgres://postgres:${MVP_POSTGRES_PASSWORD}@mvp-db:5432/mvp_avior
+      JWT_SECRET: ${MVP_JWT_SECRET:?Define MVP_JWT_SECRET}
+      ADMIN_USERNAME: ${MVP_ADMIN_USERNAME:?Define MVP_ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${MVP_ADMIN_PASSWORD:?Define MVP_ADMIN_PASSWORD}
+      SEED_DEMO_DATA: "false"
+      AUTO_MIGRATE: "true"
+    depends_on:
+      mvp-db:
+        condition: service_healthy
+    volumes:
+      - mvp_uploads:/app/uploads
+    restart: unless-stopped
+
+  mvp-frontend:
+    image: ${DOCKERHUB_USERNAME:?Define DOCKERHUB_USERNAME}/mvp-avior-frontend:latest
+    depends_on:
+      - mvp-backend
+    restart: unless-stopped
+
   frontend:
     image: ${DOCKERHUB_USERNAME}/portafolio-frontend:latest
     depends_on:
@@ -35,3 +73,5 @@ services:
 
 volumes:
   pgdata:
+  mvp_pgdata:
+  mvp_uploads:

@@ -1,14 +1,18 @@
-name: DEV - Pruebas automatizadas
+name: DEV - Pruebas de portafolio y MVP AVIOR
 
 on:
+  workflow_call:
   push:
     branches: [dev]
   pull_request:
     branches: [dev]
 
+permissions:
+  contents: read
+
 jobs:
-  backend-tests:
-    name: Tests backend (unit + integración)
+  portfolio-backend:
+    name: Portafolio - backend unitarios e integración
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -17,60 +21,79 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: portafolio_test
-        ports:
-          - 5432:5432
+        ports: [5432:5432]
         options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    defaults:
-      run:
-        working-directory: backend
+          --health-cmd "pg_isready -U postgres -d portafolio_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: backend/package-lock.json
-
-      - name: Instalar dependencias
-        run: npm ci
-
-      - name: Ejecutar tests unitarios y de integración
-        run: npm test
+      - run: npm ci
+        working-directory: backend
+      - run: npm test -- --runInBand
+        working-directory: backend
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/portafolio_test
 
-  frontend-unit-tests:
-    name: Tests frontend (unit)
+  portfolio-frontend:
+    name: Portafolio - frontend unitarios
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm test -- --run
+        working-directory: frontend
 
-      - name: Instalar dependencias
-        run: npm ci
+  portfolio-e2e:
+    name: Portafolio - E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run test:e2e
+        working-directory: frontend
 
-      - name: Ejecutar tests unitarios
-        run: npm test
+  mvp-unit:
+    name: MVP AVIOR - unitarios frontend y backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            mvp-avior/backend/package-lock.json
+            mvp-avior/frontend/package-lock.json
+      - run: npm ci
+        working-directory: mvp-avior/backend
+      - run: npm run test:unit
+        working-directory: mvp-avior/backend
+      - run: npm ci
+        working-directory: mvp-avior/frontend
+      - run: npm run test:unit
+        working-directory: mvp-avior/frontend
 
-  e2e-tests:
-    name: Tests E2E (Playwright)
+  mvp-integration:
+    name: MVP AVIOR - integración API
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -78,39 +101,38 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: portafolio
-        ports:
-          - 5432:5432
+          POSTGRES_DB: mvp_avior_test
+        ports: [5432:5432]
         options: >-
-          --health-cmd pg_isready
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    defaults:
-      run:
-        working-directory: frontend
+          --health-cmd "pg_isready -U postgres -d mvp_avior_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Instalar dependencias frontend
-        run: npm ci
-
-      - name: Instalar dependencias backend
-        run: npm ci
-        working-directory: backend
-
-      - name: Instalar navegador de Playwright
-        run: npx playwright install --with-deps chromium
-
-      - name: Ejecutar tests E2E
-        run: npm run test:e2e
+          cache-dependency-path: mvp-avior/backend/package-lock.json
+      - run: npm ci
+        working-directory: mvp-avior/backend
+      - run: npm run test:integration
+        working-directory: mvp-avior/backend
         env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/portafolio
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/mvp_avior_test
+
+  mvp-e2e:
+    name: MVP AVIOR - E2E
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mvp-avior/frontend/package-lock.json
+      - run: npm ci
+        working-directory: mvp-avior/frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: mvp-avior/frontend
+      - run: npm run test:e2e
+        working-directory: mvp-avior/frontend

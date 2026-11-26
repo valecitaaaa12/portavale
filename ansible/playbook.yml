@@ -3,19 +3,29 @@
   hosts: all
   become: true
   vars:
-    allowed_tcp_ports: [22, 80, 443, 5900]
+    allowed_tcp_ports: [22, 80, 443]
     deploy_dir: /opt/portafolio
-    dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') | default('valecitaaaa12', true) }}"
-    frontend_image: "{{ dockerhub_username }}/portafolio-frontend:latest"
-    backend_image: "{{ dockerhub_username }}/portafolio-backend:latest"
+    dockerhub_username: "{{ lookup('env', 'DOCKERHUB_USERNAME') }}"
     vnc_password: "{{ lookup('env', 'VNC_PASSWORD') }}"
+    postgres_password: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
+    mvp_postgres_password: "{{ lookup('env', 'MVP_POSTGRES_PASSWORD') }}"
+    mvp_jwt_secret: "{{ lookup('env', 'MVP_JWT_SECRET') }}"
+    mvp_admin_username: "{{ lookup('env', 'MVP_ADMIN_USERNAME') }}"
+    mvp_admin_password: "{{ lookup('env', 'MVP_ADMIN_PASSWORD') }}"
 
   tasks:
     - name: Validar que la contraseña VNC se haya proporcionado
       assert:
         that:
+          - dockerhub_username | length > 0
+          - lookup('env', 'DOCKERHUB_TOKEN') | length > 0
           - vnc_password | length >= 8
-        fail_msg: "Define VNC_PASSWORD (mínimo 8 caracteres) antes de ejecutar este playbook."
+          - postgres_password | length >= 16
+          - mvp_postgres_password | length >= 16
+          - mvp_jwt_secret | length >= 32
+          - mvp_admin_username | length > 0
+          - mvp_admin_password | length >= 12
+        fail_msg: "Faltan secretos requeridos o no cumplen la longitud mínima."
       no_log: true
 
     - name: Actualizar índices de paquetes
@@ -102,7 +112,7 @@
           [Service]
           User=ubuntu
           Type=forking
-          ExecStart=/usr/bin/vncserver :1 -localhost no -SecurityTypes VncAuth -PasswordFile /home/ubuntu/.vnc/passwd -Geometry 1280x800
+          ExecStart=/usr/bin/vncserver :1 -localhost yes -SecurityTypes VncAuth -PasswordFile /home/ubuntu/.vnc/passwd -Geometry 1280x800
           ExecStop=/usr/bin/vncserver -kill :1
           Restart=on-failure
 
@@ -135,18 +145,38 @@
     - name: Crear archivo .env con el usuario de Docker Hub
       copy:
         dest: "{{ deploy_dir }}/.env"
-        content: "DOCKERHUB_USERNAME={{ dockerhub_username }}\n"
+        content: |
+          DOCKERHUB_USERNAME={{ dockerhub_username }}
+          POSTGRES_PASSWORD={{ postgres_password }}
+          MVP_POSTGRES_PASSWORD={{ mvp_postgres_password }}
+          MVP_JWT_SECRET={{ mvp_jwt_secret }}
+          MVP_ADMIN_USERNAME={{ mvp_admin_username }}
+          MVP_ADMIN_PASSWORD={{ mvp_admin_password }}
         owner: ubuntu
         group: ubuntu
         mode: "0600"
+      no_log: true
 
     - name: Login en Docker Hub
       shell: |
-        echo '{{ lookup("env", "DOCKERHUB_TOKEN") }}' | docker login -u '{{ dockerhub_username }}' --password-stdin
+        printf '%s' {{ lookup('env', 'DOCKERHUB_TOKEN') | quote }} | docker login -u {{ dockerhub_username | quote }} --password-stdin
       no_log: true
       register: docker_login
       changed_when: false
+
+    - name: Comprobar si existe el contenedor web anterior
+      command: docker inspect avior-web --format '{{.Id}}'
+      register: previous_site
+      changed_when: false
       failed_when: false
+
+    - name: Guardar imagen de respaldo del sitio anterior
+      command: docker commit avior-web portavale-rollback:before-deploy
+      when: previous_site.rc == 0
+
+    - name: Liberar el puerto 80 del sitio anterior
+      command: docker stop avior-web
+      when: previous_site.rc == 0
 
     - name: Levantar el stack con Docker Compose
       command: docker compose up -d --pull always
@@ -154,6 +184,21 @@
         chdir: "{{ deploy_dir }}"
       environment:
         DOCKERHUB_USERNAME: "{{ dockerhub_username }}"
+      register: compose_up
+      failed_when: false
+
+    - name: Restaurar el sitio anterior si falla el despliegue
+      block:
+        - command: docker compose down
+          args:
+            chdir: "{{ deploy_dir }}"
+        - command: docker start avior-web
+      when: compose_up.rc != 0 and previous_site.rc == 0
+
+    - name: Detener el play si no pudo levantar el stack
+      fail:
+        msg: "Docker Compose no pudo iniciar el stack de las dos prácticas."
+      when: compose_up.rc != 0
 
     - name: Verificar que los contenedores estén corriendo
       command: docker compose ps
