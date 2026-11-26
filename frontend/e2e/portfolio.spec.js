@@ -9,7 +9,11 @@ test.describe("Portafolio personal - E2E", () => {
     await expect(
       page.getByRole("heading", { name: "Valentina Valda" })
     ).toBeVisible();
-    await expect(page.getByAltText("Foto de Valentina Valda")).toBeVisible();
+    const photo = page.getByAltText("Foto de Valentina Valda");
+    await expect(photo).toBeVisible();
+    await expect
+      .poll(() => photo.evaluate((image) => image.naturalWidth))
+      .toBeGreaterThan(0);
   });
 
   test("la navegación por pestañas muestra la sección de proyectos", async ({
@@ -32,15 +36,17 @@ test.describe("Portafolio personal - E2E", () => {
     await expect(page.getByText("Bad Bunny Vape Bolivia")).toBeVisible();
     await expect(page.getByText("AVIOR Corporation SRL")).toBeVisible();
     await expect(page.getByText("Borboleta Salón de Eventos")).toBeVisible();
-    await expect(
-      page.getByAltText("Portada de Bad Bunny Vape Bolivia")
-    ).toBeVisible();
-    await expect(
-      page.getByAltText("Portada de AVIOR Corporation SRL")
-    ).toBeVisible();
-    await expect(
-      page.getByAltText("Portada de Borboleta Salón de Eventos")
-    ).toBeVisible();
+    for (const alt of [
+      "Portada de Bad Bunny Vape Bolivia",
+      "Portada de AVIOR Corporation SRL",
+      "Portada de Borboleta Salón de Eventos"
+    ]) {
+      const cover = page.getByAltText(alt);
+      await expect(cover).toBeVisible();
+      await expect
+        .poll(() => cover.evaluate((image) => image.naturalWidth))
+        .toBeGreaterThan(0);
+    }
   });
 
   test("la pestaña Sobre mí muestra el WhatsApp", async ({ page }) => {

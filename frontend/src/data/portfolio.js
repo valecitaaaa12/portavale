@@ -1,10 +1,12 @@
+const publicAsset = (path) => `${import.meta.env.BASE_URL}${path}`;
+
 export const profile = {
   name: "Valentina Valda",
   fullName: "Natalia Valentina Valda Ibáñez",
   title: "Estudiante de Ingeniería de Sistemas Informáticos",
   about:
     "Soy Valentina Valda, estudiante de Ingeniería de Sistemas Informáticos con interés en transformar ideas en productos funcionales. He desarrollado proyectos reales —tiendas online, sitios institucionales y sistemas de gestión— dominando el stack JavaScript (React, Next.js, Node.js) y herramientas de despliegue como Docker, GitHub Actions y Oracle Cloud. Me apasiona el aprendizaje continuo y el trabajo en equipo.",
-  photo: "/valevalda.jpeg",
+  photo: publicAsset("valevalda.jpeg"),
   location: "Bolivia",
   email: "vvalda@gmail.com",
   emailAlt: "vvalda549@gmail.com",
@@ -37,7 +39,7 @@ export const profile = {
       tech: ["React", "Vite", "Tailwind CSS"],
       url: "https://bad-bunny-vape-bolivia.vercel.app",
       repo: "https://github.com/valecitaaaa12/proyectocondonata",
-      cover: "/covers/bad-bunny-vape.svg",
+      cover: publicAsset("covers/bad-bunny-vape.svg"),
       icon: "💨"
     },
     {
@@ -48,7 +50,7 @@ export const profile = {
       tech: ["React", "Vite", "Docker", "GitHub Actions"],
       url: null,
       repo: "https://github.com/valecitaaaa12/avior-corporation",
-      cover: "/covers/avior-corporation.svg",
+      cover: publicAsset("covers/avior-corporation.svg"),
       icon: "✈️"
     },
     {
@@ -59,7 +61,7 @@ export const profile = {
       tech: ["Next.js", "TypeScript", "Prisma", "PostgreSQL"],
       url: null,
       repo: "https://github.com/valecitaaaa12/borboleta",
-      cover: "/covers/borboleta.svg",
+      cover: publicAsset("covers/borboleta.svg"),
       icon: "🦋"
     }
   ]
