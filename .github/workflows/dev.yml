@@ -153,4 +153,3 @@ jobs:
         working-directory: mvp-avior/frontend
       - run: npm run test:e2e
         working-directory: mvp-avior/frontend
-
