@@ -1,102 +1,74 @@
-# 🎨 Portafolio Personal — Valentina Valda
+# Portafolio personal y MVP AVIOR
 
-**Práctica 3.2** — Portafolio personal con frameworks Frontend, Backend y BD,
-pipeline en GitHub Actions, empaquetado en Docker, infraestructura con
-Terraform (Oracle Cloud) y configuración con Ansible.
+Repositorio para las prácticas 3.2 (portafolio personal) y 4.1 (MVP AVIOR). La interfaz del portafolio usa React/Vite con una estética editorial en blanco y negro; AVIOR es un panel privado para administrar instructores, horas y pagos. Ambos proyectos tienen API Express y PostgreSQL.
 
-## 📁 Estructura
+## Práctica 3.2 — Portafolio
 
-```
-portafolio-personal/
-├── .github/workflows/
-│   ├── dev.yml          # Push a dev → pruebas automatizadas
-│   └── main.yml         # Push a main → Docker + Terraform + Ansible
-├── frontend/            # React + Vite (Dockerfile multi-etapa + Nginx)
-│   ├── src/
-│   ├── tests/           # Tests unitarios (Vitest)
-│   └── e2e/             # Tests E2E (Playwright)
-├── backend/             # Express + PostgreSQL (API REST)
-│   ├── src/
-│   └── tests/           # Unit (Jest) + Integración (Supertest)
-├── terraform/           # VCN, subnet, security list, VM Ubuntu 24.04, IP pública
-├── ansible/             # Playbook: docker, git, firewall/iptables, VNC, despliegue
-├── scripts/setup-vm.sh  # Alternativa con script bash
-├── docker-compose.yml   # Desarrollo local
-└── docker-compose.prod.yml  # Despliegue en la VM (imágenes de Docker Hub)
-```
+- React, Vite y navegación por pestañas; incluye inicio, sobre mí, skills, proyectos y contacto.
+- Perfil, portadas de proyectos, enlaces de GitHub y WhatsApp `+591 7579 1516`.
+- API REST en Express y PostgreSQL.
+- Pruebas: unitarias, integración y Playwright E2E.
+- Docker, CI en `dev`, y publicación/despliegue en `main`.
 
-## 🚀 Ejecución local
+## Práctica 4.1 — MVP AVIOR
 
-```bash
-# 1. Base de datos
-docker compose up -d db
+- Aplicación para dos integrantes del equipo, con frontend React, API Express y PostgreSQL.
+- Inicio de sesión, directorio de instructores, registro de clases, cálculos de montos, pagos pendientes, configuración y avisos.
+- Colores institucionales negro y rojo, con el logotipo AVIOR.
+- Pruebas: unitarias, integración y Playwright E2E; cada categoría supera el mínimo de seis.
 
-# 2. Backend (terminal 1)
-cd backend
-npm install
-npm run seed
-npm run dev            # http://localhost:5000
+## Ejecutar localmente
 
-# 3. Frontend (terminal 2)
-cd frontend
-npm install
-npm run dev            # http://localhost:5173
+Necesitas Node.js 20 o superior y Docker Desktop con el motor Linux activo.
+
+```powershell
+# Portafolio (frontend :80, backend :5000 y PostgreSQL :5432)
+docker compose up -d --build
+
+# MVP AVIOR (frontend :5174, backend :5001 y PostgreSQL :5433)
+docker compose -f mvp-avior/docker-compose.yml up -d --build
 ```
 
-## 🧪 Tests
+Para desarrollo sin Docker, instala dependencias en `backend`, `frontend`, `mvp-avior/backend` y `mvp-avior/frontend`; revisa sus archivos `.env.example` y README antes de iniciar los servidores.
 
-```bash
-# Unit + integración (backend)
-cd backend && npm test
+## Pruebas
 
-# Unit (frontend)
-cd frontend && npm test
-
-# E2E (requiere docker compose up -d db)
-cd frontend && npx playwright install chromium && npm run test:e2e
+```powershell
+cd backend; npm ci; npm run test:unit; npm run test:integration
+cd ../frontend; npm ci; npm test; npx playwright install chromium; npm run test:e2e
+cd ../mvp-avior/backend; npm ci; npm run test:unit; npm run test:integration
+cd ../frontend; npm ci; npm run test:unit; npx playwright install chromium; npm run test:e2e
 ```
 
-## 🐳 Docker
+GitHub Actions instala Chromium y ejecuta las seis categorías en CI al hacer push o abrir un PR a `dev`; PostgreSQL se levanta como servicio de los jobs que lo requieren.
 
-```bash
-Copy-Item .env.example .env      # define una clave propia para la base de datos
-docker compose up -d --build     # frontend en :80, backend en :5000, db en :5432
-```
+## CI/CD y servicios externos
 
-Para producción, define `POSTGRES_PASSWORD`, `DOCKERHUB_USERNAME` y `VNC_PASSWORD` en `.env` o como secretos del entorno. No uses credenciales de ejemplo en una VM pública.
+`.github/workflows/dev.yml` corre las pruebas de ambas prácticas en `dev`. `.github/workflows/main.yml` publica las cuatro imágenes a Docker Hub, aplica Terraform y después configura/despliega los dos proyectos con Ansible. Terraform conserva su estado en un bucket privado de OCI Object Storage mediante el backend OCI nativo, de modo que los siguientes pushes actualicen la misma VM en lugar de crear copias.
 
-## ☁️ Infraestructura
+Antes del primer despliegue:
 
-- **Terraform**: VCN + subnet pública + security list (22, 80, 443, 5900/VNC)
-  + VM Ubuntu 24.04 con IP pública en Oracle Cloud.
-- **Ansible**: instala Docker y Git, configura firewall (UFW + iptables en 80/443),
-  instala VNC y levanta el portafolio con Docker Compose.
+1. En OCI, crea un bucket privado de Object Storage para el estado Terraform y habilita el versionado del bucket. Anota el namespace del Object Storage.
+2. En OCI, confirma que el usuario de las credenciales de API de Terraform tenga permiso de leer/escribir objetos en ese bucket.
+3. En GitHub, añade los secretos requeridos de la tabla siguiente y crea el entorno `oci-production` con un revisor obligatorio. El job de Terraform quedará detenido hasta que una persona apruebe el despliegue de pago.
+4. Revisa el costo antes de aprobar el job. La configuración usa `VM.Standard.E4.Flex`, 1 OCPU y 8 GB RAM, una instancia pagada. La estimación de cómputo es aproximadamente US$0.0484922/hora (US$35.40 por 730 horas), sin incluir disco de arranque, almacenamiento, tráfico, impuestos ni variaciones regionales. Confirma el total en el estimador OCI de la región de la cuenta.
+5. VNC solo escucha en localhost; conéctate mediante túnel SSH: `ssh -L 5901:127.0.0.1:5901 ubuntu@IP_PUBLICA`.
 
-## 🔑 Secrets de GitHub requeridos (para main)
-
-| Secret | Descripción |
+| GitHub Secret | Uso |
 |---|---|
-| `DOCKERHUB_USERNAME` | Usuario de Docker Hub |
-| `DOCKERHUB_TOKEN` | Token de acceso de Docker Hub |
-| `OCI_TENANCY_OCID` | OCID del tenancy |
-| `OCI_USER_OCID` | OCID del usuario |
-| `OCI_FINGERPRINT` | Fingerprint de la API key |
-| `OCI_PRIVATE_KEY` | Contenido de la clave privada .pem |
-| `OCI_REGION` | Región (ej. us-ashburn-1) |
-| `OCI_COMPARTMENT_OCID` | OCID del compartment |
-| `SSH_PUBLIC_KEY` | Clave pública SSH para la VM |
-| `SSH_PRIVATE_KEY` | Clave privada SSH para Ansible |
-| `VNC_PASSWORD` | Contraseña del servidor VNC |
+| `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN` | Publicar imágenes y descargarlas en la VM |
+| `OCI_TENANCY_OCID`, `OCI_USER_OCID`, `OCI_FINGERPRINT`, `OCI_PRIVATE_KEY`, `OCI_REGION`, `OCI_COMPARTMENT_OCID` | Proveedor OCI de Terraform |
+| `OCI_OBJECT_STORAGE_NAMESPACE`, `OCI_STATE_BUCKET` | Estado remoto de Terraform |
+| `SSH_PUBLIC_KEY`, `SSH_PRIVATE_KEY` | Acceso SSH de Ansible a la VM |
+| `VNC_PASSWORD` | Contraseña VNC (mínimo 8 caracteres) |
+| `POSTGRES_PASSWORD`, `MVP_POSTGRES_PASSWORD` | PostgreSQL (mínimo 16 caracteres cada una) |
+| `MVP_JWT_SECRET` | Firma de sesiones (mínimo 32 caracteres) |
+| `MVP_ADMIN_USERNAME`, `MVP_ADMIN_PASSWORD` | Cuenta administrativa inicial de AVIOR (contraseña mínimo 12 caracteres) |
 
-## 🌐 Cloudflare (puntos extra)
+No guardes credenciales, tokens, claves privadas ni archivos `.env` en Git.
 
-Zona de dominio + registro `A` apuntando a la IP pública de la VM.
-# Portafolio Valentina y MVP AVIOR
+## Dominio opcional
 
-El repositorio entrega dos prácticas:
+Cloudflare solo añade puntos si existe un dominio y una zona DNS bajo tu cuenta. Cuando confirmes el dominio, el registro `A` debe apuntar a la IP pública de la VM; después se habilita HTTPS y proxy DNS. No se compró ni cambió un dominio como parte de estos cambios locales.
 
-- **Práctica 3.2:** portafolio personal con React/Vite, Express y PostgreSQL.
-- **Práctica 4.1:** MVP AVIOR para administrar instructores, horas y pagos, con React/Vite, Express y PostgreSQL.
-
-La guía de requisitos, pruebas, Docker, GitHub Actions, Terraform, Ansible y pasos de entrega está en [docs/practicas-3.2-y-4.1.md](docs/practicas-3.2-y-4.1.md).
-
+Consulta [docs/practicas-3.2-y-4.1.md](docs/practicas-3.2-y-4.1.md) para el detalle de requisitos, responsabilidades del equipo y evidencias.

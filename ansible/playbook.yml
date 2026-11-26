@@ -96,7 +96,9 @@
         mode: "0700"
 
     - name: Configurar contraseña de VNC
-      shell: echo '{{ vnc_password }}' | vncpasswd -f > /home/ubuntu/.vnc/passwd && chmod 600 /home/ubuntu/.vnc/passwd
+      shell: printf '%s\n' "$VNC_PASSWORD" | vncpasswd -f > /home/ubuntu/.vnc/passwd && chmod 600 /home/ubuntu/.vnc/passwd
+      environment:
+        VNC_PASSWORD: "{{ vnc_password }}"
       args:
         creates: /home/ubuntu/.vnc/passwd
       no_log: true

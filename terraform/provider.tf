@@ -1,6 +1,9 @@
 terraform {
   required_version = ">= 1.5.0"
 
+  # El CI guarda el estado en OCI Object Storage usando el backend nativo.
+  backend "oci" {}
+
   required_providers {
     oci = {
       source  = "oracle/oci"

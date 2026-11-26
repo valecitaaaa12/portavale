@@ -82,7 +82,7 @@ resource "oci_core_security_list" "portafolio" {
 
   # ICMP (ping)
   ingress_security_rules {
-    source = "0.0.0.0/0"
+    source   = "0.0.0.0/0"
     protocol = "1"
     icmp_options {
       type = 3
@@ -92,13 +92,13 @@ resource "oci_core_security_list" "portafolio" {
 }
 
 resource "oci_core_subnet" "public" {
-  compartment_id     = var.compartment_ocid
-  vcn_id             = oci_core_vcn.portafolio.id
-  cidr_block         = var.subnet_cidr
-  display_name       = "${var.project_name}-public-subnet"
-  dns_label          = "public"
-  security_list_ids  = [oci_core_security_list.portafolio.id]
-  route_table_id     = oci_core_route_table.portafolio.id
+  compartment_id             = var.compartment_ocid
+  vcn_id                     = oci_core_vcn.portafolio.id
+  cidr_block                 = var.subnet_cidr
+  display_name               = "${var.project_name}-public-subnet"
+  dns_label                  = "public"
+  security_list_ids          = [oci_core_security_list.portafolio.id]
+  route_table_id             = oci_core_route_table.portafolio.id
   prohibit_public_ip_on_vnic = false
 }
 
@@ -110,6 +110,11 @@ resource "oci_core_instance" "portafolio_vm" {
   availability_domain = data.oci_identity_availability_domains.ads.availability_domains[0].name
   display_name        = var.vm_display_name
   shape               = var.instance_shape
+
+  shape_config {
+    ocpus         = var.instance_ocpus
+    memory_in_gbs = var.instance_memory_gbs
+  }
 
   create_vnic_details {
     subnet_id        = oci_core_subnet.public.id
@@ -128,8 +133,8 @@ resource "oci_core_instance" "portafolio_vm" {
   }
 
   freeform_tags = {
-    Project    = var.project_name
-    Practica   = "3.2"
+    Project   = var.project_name
+    Practica  = "3.2"
     ManagedBy = "Terraform"
   }
 }

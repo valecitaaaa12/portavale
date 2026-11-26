@@ -37,18 +37,30 @@ variable "ssh_public_key" {
 
 variable "instance_shape" {
   type        = string
-  description = "Shape de la instancia (E2.1.Micro es Always Free)"
-  default     = "VM.Standard.E2.1.Micro"
+  description = "Shape pagado de la instancia para el despliegue"
+  default     = "VM.Standard.E4.Flex"
+}
+
+variable "instance_ocpus" {
+  type        = number
+  description = "OCPU para VM.Standard.E4.Flex"
+  default     = 1
+}
+
+variable "instance_memory_gbs" {
+  type        = number
+  description = "Memoria en GB para VM.Standard.E4.Flex"
+  default     = 8
 }
 
 variable "vcn_cidr" {
-  type        = string
-  default     = "10.0.0.0/16"
+  type    = string
+  default = "10.0.0.0/16"
 }
 
 variable "subnet_cidr" {
-  type        = string
-  default     = "10.0.1.0/24"
+  type    = string
+  default = "10.0.1.0/24"
 }
 
 variable "vm_display_name" {

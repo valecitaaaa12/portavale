@@ -10,3 +10,8 @@ playwright-report/
 *.pem
 oci_key
 .DS_Store
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/backend.hcl
+terraform/oci_api_key.pem

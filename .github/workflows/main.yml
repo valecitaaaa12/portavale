@@ -61,6 +61,7 @@ jobs:
     name: Terraform - crear la VM Ubuntu 24.04 en OCI
     needs: dockerhub
     runs-on: ubuntu-latest
+    environment: oci-production
     outputs:
       public_ip: ${{ steps.apply.outputs.public_ip }}
     defaults:
@@ -70,7 +71,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.9.0
+          terraform_version: 1.12.0
       - name: Preparar credencial temporal de OCI
         env:
           OCI_PRIVATE_KEY: ${{ secrets.OCI_PRIVATE_KEY }}
@@ -78,7 +79,34 @@ jobs:
           test -n "$OCI_PRIVATE_KEY"
           printf '%s\n' "$OCI_PRIVATE_KEY" > oci_api_key.pem
           chmod 600 oci_api_key.pem
-      - run: terraform init -input=false
+      - name: Preparar estado remoto privado en OCI Object Storage
+        env:
+          OCI_OBJECT_STORAGE_NAMESPACE: ${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}
+          OCI_STATE_BUCKET: ${{ secrets.OCI_STATE_BUCKET }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+        run: |
+          test -n "$OCI_OBJECT_STORAGE_NAMESPACE"
+          test -n "$OCI_STATE_BUCKET"
+          test -n "$OCI_REGION"
+          cat > backend.hcl <<EOF
+          bucket = "$OCI_STATE_BUCKET"
+          key = "portavale/terraform.tfstate"
+          namespace = "$OCI_OBJECT_STORAGE_NAMESPACE"
+          region = "$OCI_REGION"
+          auth = "APIKey"
+          EOF
+      - name: Inicializar Terraform con estado remoto
+        env:
+          OCI_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_user_ocid: ${{ secrets.OCI_USER_OCID }}
+          OCI_fingerprint: ${{ secrets.OCI_FINGERPRINT }}
+          OCI_private_key_path: ${{ github.workspace }}/terraform/oci_api_key.pem
+          OCI_region: ${{ secrets.OCI_REGION }}
+        run: |
+          test -n "$OCI_tenancy_ocid"
+          test -n "$OCI_user_ocid"
+          test -n "$OCI_fingerprint"
+          terraform init -input=false -backend-config=backend.hcl
       - name: Crear la infraestructura (VCN, subnet, VM con IP pública)
         id: apply
         env:
@@ -93,7 +121,7 @@ jobs:
           terraform apply -input=false -auto-approve
           echo "public_ip=$(terraform output -raw public_ip)" >> "$GITHUB_OUTPUT"
       - if: always()
-        run: rm -f oci_api_key.pem
+        run: rm -f oci_api_key.pem backend.hcl
 
   deploy:
     name: Configurar VM y desplegar los dos proyectos

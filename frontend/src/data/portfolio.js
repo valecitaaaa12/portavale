@@ -6,7 +6,7 @@ export const profile = {
     "Soy Valentina Valda, estudiante de Ingeniería de Sistemas Informáticos con interés en transformar ideas en productos funcionales. He desarrollado proyectos reales —tiendas online, sitios institucionales y sistemas de gestión— dominando el stack JavaScript (React, Next.js, Node.js) y herramientas de despliegue como Docker, GitHub Actions y Oracle Cloud. Me apasiona el aprendizaje continuo y el trabajo en equipo.",
   photo: "/valevalda.jpeg",
   location: "Bolivia",
-  email: "valentinavalda446@gmail.com",
+  email: "vvalda@gmail.com",
   emailAlt: "vvalda549@gmail.com",
   whatsapp: "+59175791516",
   github: "https://github.com/valecitaaaa12",

@@ -6,6 +6,7 @@ import Skills from "./components/Skills";
 import Projects from "./components/Projects";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
+import PsychedelicLines from "./components/PsychedelicLines";
 import { profile } from "./data/portfolio";
 
 export default function App() {
@@ -16,13 +17,16 @@ export default function App() {
       <Navbar active={tab} onSelect={setTab} />
 
       <main className="page" key={tab}>
-        {tab === "inicio" && <Hero profile={profile} onNavigate={setTab} />}
-        {tab === "sobre-mi" && <About profile={profile} />}
-        {tab === "skills" && (
-          <Skills skills={profile.skills} note={profile.skillsNote} />
-        )}
-        {tab === "proyectos" && <Projects projects={profile.projects} />}
-        {tab === "contacto" && <Contact profile={profile} />}
+        <PsychedelicLines variant={tab === "inicio" ? "hero" : "section"} />
+        <div className="page__content">
+          {tab === "inicio" && <Hero profile={profile} onNavigate={setTab} />}
+          {tab === "sobre-mi" && <About profile={profile} />}
+          {tab === "skills" && (
+            <Skills skills={profile.skills} note={profile.skillsNote} />
+          )}
+          {tab === "proyectos" && <Projects projects={profile.projects} />}
+          {tab === "contacto" && <Contact profile={profile} />}
+        </div>
       </main>
 
       <Footer profile={profile} />
