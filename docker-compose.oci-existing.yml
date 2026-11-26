@@ -1,0 +1,135 @@
+services:
+  portfolio-db:
+    image: postgres:16-alpine
+    command: ["postgres", "-c", "shared_buffers=32MB", "-c", "max_connections=20"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${PORTFOLIO_DB_PASSWORD:?Set PORTFOLIO_DB_PASSWORD in the server .env}
+      POSTGRES_DB: portafolio
+    volumes:
+      - portavale_portfolio_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d portafolio"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    mem_limit: 128m
+    restart: unless-stopped
+    networks: [internal]
+
+  portfolio-api:
+    image: portavale-portfolio-api:latest
+    build: ./backend
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=96
+      PORT: "5000"
+      DATABASE_URL: postgres://postgres:${PORTFOLIO_DB_PASSWORD}@portfolio-db:5432/portafolio
+      AUTO_MIGRATE: "true"
+    depends_on:
+      portfolio-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    mem_limit: 128m
+    restart: unless-stopped
+    networks: [internal, edge]
+    labels:
+      com.valda.app: portfolio-api
+
+  portfolio-web:
+    image: portavale-portfolio-web:latest
+    build:
+      context: ./frontend
+      args:
+        VITE_BASE_PATH: /practicas/portafolio/
+        VITE_API_URL: /practicas/portafolio-api
+    depends_on:
+      portfolio-api:
+        condition: service_healthy
+    mem_limit: 40m
+    restart: unless-stopped
+    networks:
+      edge:
+        aliases: [portavale-portfolio-web]
+
+  mvp-db:
+    image: postgres:16-alpine
+    command: ["postgres", "-c", "shared_buffers=32MB", "-c", "max_connections=20"]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${MVP_DB_PASSWORD:?Set MVP_DB_PASSWORD in the server .env}
+      POSTGRES_DB: mvp_avior
+    volumes:
+      - portavale_mvp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mvp_avior"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+    mem_limit: 128m
+    restart: unless-stopped
+    networks: [internal]
+
+  mvp-api:
+    image: portavale-mvp-api:latest
+    build: ./mvp-avior/backend
+    environment:
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=96
+      PORT: "5001"
+      DATABASE_URL: postgres://postgres:${MVP_DB_PASSWORD}@mvp-db:5432/mvp_avior
+      JWT_SECRET: ${MVP_JWT_SECRET:?Set MVP_JWT_SECRET in the server .env}
+      ADMIN_USERNAME: ${MVP_ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${MVP_ADMIN_PASSWORD:?Set MVP_ADMIN_PASSWORD in the server .env}
+      SEED_DEMO_DATA: "true"
+      AUTO_MIGRATE: "true"
+    depends_on:
+      mvp-db:
+        condition: service_healthy
+    volumes:
+      - portavale_mvp_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 20s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    mem_limit: 128m
+    restart: unless-stopped
+    networks: [internal, edge]
+    labels:
+      com.valda.app: mvp-avior-api
+
+  mvp-web:
+    image: portavale-mvp-web:latest
+    build:
+      context: ./mvp-avior/frontend
+      args:
+        VITE_BASE_PATH: /practicas/mvp/
+        VITE_API_URL: /practicas/mvp-api
+        VITE_UPLOADS_URL: /practicas/mvp-uploads
+    depends_on:
+      mvp-api:
+        condition: service_healthy
+    mem_limit: 40m
+    restart: unless-stopped
+    networks:
+      edge:
+        aliases: [portavale-mvp-web]
+
+volumes:
+  portavale_portfolio_pgdata:
+  portavale_mvp_pgdata:
+  portavale_mvp_uploads:
+
+networks:
+  internal:
+    name: portavale-practicas-internal
+  edge:
+    name: portavale-edge
+    external: true
