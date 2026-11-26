@@ -37,7 +37,10 @@ services:
       retries: 5
     mem_limit: 128m
     restart: unless-stopped
-    networks: [internal, edge]
+    networks:
+      internal: {}
+      edge:
+        aliases: [portavale-portfolio-api]
     labels:
       com.valda.app: portfolio-api
 
@@ -101,7 +104,10 @@ services:
       retries: 5
     mem_limit: 128m
     restart: unless-stopped
-    networks: [internal, edge]
+    networks:
+      internal: {}
+      edge:
+        aliases: [portavale-mvp-api]
     labels:
       com.valda.app: mvp-avior-api
 
