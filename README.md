@@ -73,7 +73,7 @@ Cloudflare solo añade puntos si existe un dominio y una zona DNS bajo tu cuenta
 
 ## Estado del despliegue actual
 
-El 26 de noviembre de 2026 se publicaron las aplicaciones en la VM existente. Se validaron desde fuera de la instancia la página AVIOR existente, las dos interfaces y las dos rutas de salud de API; todas devolvieron HTTP 200. La ejecución DEV `45822973721` del commit `96ef419` terminó correctamente. Las cuatro imágenes están construidas y ejecutándose en la VM; falta publicarlas en Docker Hub y completar el workflow MAIN cuando estén configurados sus secretos. Consulta [docs/OCI_EXISTING_VM.md](docs/OCI_EXISTING_VM.md).
+El 26 de noviembre de 2026 se publicaron las aplicaciones en la VM existente. Se validaron desde fuera de la instancia la página AVIOR existente, las dos interfaces y las dos rutas de salud de API; todas devolvieron HTTP 200. La ejecución DEV `45825686180` del commit `8e31714` terminó correctamente. Las cuatro imágenes están construidas y ejecutándose en la VM; falta publicarlas en Docker Hub y completar el workflow MAIN cuando se disponga de las credenciales requeridas. Consulta [docs/OCI_EXISTING_VM.md](docs/OCI_EXISTING_VM.md).
 
 Las reglas TCP 80 y 443 en iptables se conservan mediante `deployment/configure-firewall.sh` y `portavale-firewall.service`. Para repetir la configuración, ejecuta `sudo bash deployment/configure-firewall.sh` antes del script de rutas.
 
